@@ -19,18 +19,20 @@ class Perceptron:
     def OnlinePerceptron(self, maxIter=15):
         # Initail point of weights values
         self.w = np.ones((len(self.x[0]), 1))      #w=n*1
-        c=0                                    
         self.averw = np.ones((len(self.x[0]), 1))      #w=n*1
-        s=0                             
+        s=0.0
+        c=0.0                             
         for i in range(maxIter):
             tt=0
             vt=0
             for j in range(self.dataNum):                 
-                u=np.dot(self.w.T,self.x[j].T)           #(1*n) dot (n*1)
-                yj=float(self.y[j][0]*u[0])
+                u=np.sign(np.dot(self.w.T,self.x[j].T))          #(1*n) dot (n*1)
+                yj=self.y[j]*u[0]
                 if(yj<=0):
                     if((c+s)>0):
-                        self.averw=((s*self.averw)+(c*self.w))/(s+c)
+                        a=s/(c+s)
+                        b=c/(c+s)
+                        self.averw=a*self.averw+c*self.w
                     s=s+c
                     tem=np.asmatrix(self.x[j])
                     self.w=self.w+self.y[j][0]*tem.T   
@@ -38,12 +40,12 @@ class Perceptron:
                 else:
                     c=c+1
             for j in range(self.dataNum):                 
-                u=np.dot(self.w.T,self.x[j].T)           #(1*n) dot (n*1)
-                yj=float(self.y[j][0]*u[0])
+                u=np.dot(self.averw.T,self.x[j].T)           #(1*n) dot (n*1)
+                yj=self.y[j]*u[0]
                 if(yj<=0):
                     tt+=1
             for j in range(self.vdataNum):                 
-                u=np.dot(self.w.T,self.vx[j].T)            #(1*n) dot (n*1)
+                u=np.dot(self.averw.T,self.vx[j].T)            #(1*n) dot (n*1)
                 vyj=float(self.vy[j][0]*u[0])
                 if(vyj<=0):
                     vt+=1
@@ -64,6 +66,6 @@ yv=df.iloc[:, :1].values
 biasv=np.ones((1,len(xv)))
 xxt=np.append(xt.T,biast,axis=0)
 xxv=np.append(xv.T,biasv,axis=0)
-lg=Perceptron(xxt.T,(yt-4)*(-1),xxv.T,(yv-4)*(-1))
+lg=Perceptron(xt,(yt-4)*(-1),xv,(yv-4)*(-1))
 lg.OnlinePerceptron(maxIter)
 # print(w)

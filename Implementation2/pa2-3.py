@@ -13,33 +13,54 @@ class Perceptron:
         self.x = datas                              # training examples
         self.y = result
         self.vx=vd
-        self.vy=vr                             
+        self.vy=vr
         self.dataNum = len(datas)
         self.vdataNum = len(vd)                   # number of data
     def OnlinePerceptron(self, maxIter=15):
         # Initail point of weights values
         f=len(self.x[0])
         self.w = np.zeros((len(self.x[0]), 1))      #w=n*1
-        alpha=np.zeros(self.dataNum,1)
-        for i in range(maxIter):
+        self.alpha=np.zeros((self.dataNum,1))
+        for ite in range(maxIter):
             tt=0
             vt=0
-            for j in range(self.dataNum):                 
-                u=np.dot(self.w.T,self.x[j].T)           #(1*n) dot (n*1)
-                yj=float(self.y[j][0]*u[0])
+            for i in range(self.dataNum):
+                k=0
+                for j in range(self.dataNum):
+                    kp=1+np.dot(self.x[j],self.x[i].T)
+                    tem=self.alpha[j]*kp*self.y[j][0]
+                    k+=tem
+                yj=float(self.y[i][0]*k)
                 if(yj<=0):
-                    tem=np.asmatrix(self.x[j])
-                    self.w=self.w+self.y[j][0]*tem.T
-            for j in range(self.dataNum):                 
-                u=np.dot(self.w.T,self.x[j].T)           #(1*n) dot (n*1)
-                yj=float(self.y[j][0]*u[0])
+                    self.alpha[j]=self.alpha[j]+1
+            for i in range(self.dataNum):
+                k=0
+                for j in range(self.dataNum):
+                    kp=1+np.dot(self.x[j],self.x[i].T)
+                    tem=self.alpha[j]*kp*self.y[j][0]
+                    k+=tem
+                yj=float(self.y[i][0]*k)
                 if(yj<=0):
                     tt+=1
-            for j in range(self.vdataNum):                 
-                u=np.dot(self.w.T,self.vx[j].T)            #(1*n) dot (n*1)
-                vyj=float(self.vy[j][0]*u[0])
-                if(vyj<=0):
+            for i in range(self.vdataNum):
+                k=0
+                for j in range(self.vdataNum):
+                    kp=1+np.dot(self.vx[j],self.vx[i].T)
+                    tem=self.alpha[j]*kp*self.vy[j][0]
+                    k+=tem
+                yj=float(self.vy[i][0]*k)
+                if(yj<=0):
                     vt+=1
+            # for j in range(self.dataNum):
+            #     u=np.dot(self.w.T,self.x[j].T)           #(1*n) dot (n*1)
+            #     yj=float(self.y[j][0]*u[0])
+            #     if(yj<=0):
+            #         tt+=1
+            # for j in range(self.vdataNum):
+            #     u=np.dot(self.w.T,self.vx[j].T)            #(1*n) dot (n*1)
+            #     vyj=float(self.vy[j][0]*u[0])
+            #     if(vyj<=0):
+            #         vt+=1
             print(1-(tt/self.dataNum),1-(vt/self.vdataNum))
 #======
 #main
