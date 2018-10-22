@@ -38,7 +38,10 @@ class Perceptron:
                 vyj=float(self.vy[j][0]*u[0])
                 if(vyj<=0):
                     vt+=1
-            print(1-(tt/self.dataNum),1-(vt/self.vdataNum))
+            #print(1-(tt/self.dataNum),1-(vt/self.vdataNum))
+            print(1-(tt/self.dataNum))
+
+            #print(1-(vt/self.vdataNum))
 #======
 #main
 #======
