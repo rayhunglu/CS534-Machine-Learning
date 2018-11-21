@@ -125,10 +125,10 @@ def decisiontree(x,y,maxdepth=20):
     splitdata=splittoleftright(x,y)
     root=Node(splitdata)
     level=0
-    # b=gini_benefit(x,y,3,4327,splitdata)
-    # print(b)
-    node=finddecisiontree(x,y,root,level,maxdepth)
-    return node
+    b=gini_benefit(x,y,1,2,splitdata)
+    print(b)
+    # node=finddecisiontree(x,y,root,level,maxdepth)
+    # return node
 ####################main#####################
 maxdepth=20
 df=pd.read_csv("pa3_train_reduced.csv",header=None)
