@@ -20,6 +20,7 @@ class Perceptron:
         # Initail point of weights values
         self.w = np.zeros((len(self.x[0]), 1))      #w=n*1
         for i in range(maxIter):
+            ttt=0
             tt=0
             vt=0
             for j in range(self.dataNum):                 
@@ -28,19 +29,19 @@ class Perceptron:
                 if(yj<=0):
                     tem=np.asmatrix(self.x[j])
                     self.w=self.w+self.y[j][0]*tem.T
-            for j in range(self.dataNum):                 
-                u=np.dot(self.w.T,self.x[j].T)           #(1*n) dot (n*1)
-                yj=float(self.y[j][0]*u[0])
-                if(yj<=0):
-                    tt+=1
+                    ttt+=1
+            # for j in range(self.dataNum):                 
+            #     u=np.dot(self.w.T,self.x[j].T)           #(1*n) dot (n*1)
+            #     yj=float(self.y[j][0]*u[0])
+            #     if(yj<=0):
+            #         tt+=1
             for j in range(self.vdataNum):                 
                 u=np.dot(self.w.T,self.vx[j].T)            #(1*n) dot (n*1)
                 vyj=float(self.vy[j][0]*u[0])
                 if(vyj<=0):
                     vt+=1
-            #print(1-(tt/self.dataNum),1-(vt/self.vdataNum))
-            print(1-(tt/self.dataNum))
-
+            print(1-(ttt/self.dataNum),1-(vt/self.vdataNum))
+            #print(1-(tt/self.dataNum))
             #print(1-(vt/self.vdataNum))
 #======
 #main
