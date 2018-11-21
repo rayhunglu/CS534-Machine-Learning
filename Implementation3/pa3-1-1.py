@@ -12,7 +12,7 @@ class Node:
         self.splitdataset=splitdataset
         self.splitfeature = None
         self.splitsample=None
-        
+
 def splittoleftright(data,result):#left:-1,right:1
     left=[]
     right=[]
@@ -124,8 +124,8 @@ def finddecisiontree(x,y,root,level,maxdepth):
 def decisiontree(x,y,maxdepth=20):
     splitdata=splittoleftright(x,y)
     root=Node(splitdata)
-    level=0
-    b=gini_benefit(x,y,1,2,splitdata)
+    level=7
+    b=gini_benefit(x,y,3,4468,splitdata)
     print(b)
     # node=finddecisiontree(x,y,root,level,maxdepth)
     # return node

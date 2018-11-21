@@ -38,6 +38,9 @@ def gini_benefit(datas,sample):
     c=len(datas)
     l=len(left)
     r=len(right)
+    # print(c)
+    # print(l)
+    # print(r)
     # llnum=1
     # rlnum=1
     # c=1
@@ -58,16 +61,17 @@ def chooseBestFeatureToSplit(datas,root):
     for i in range(1,len(datas[0])):#feature
         print(i)
         value=datas.T[i]
-        data=np.asarray([y,value])
-        data=data[data[:,i].argsort()]
+        data=(np.asarray([y,value])).T
+        data=data[data[:,1].argsort()]
         for j in range(0,len(datas)):#  sample index
             b,left,right=gini_benefit(data,j)
+            print(b)
             if b>gini:
                 gini=b
                 feature=i
                 leftdatas=left
                 rightdatas=right
-                threshold=data[j][i]
+                threshold=data[j][1]
     return feature,threshold,leftdatas,rightdatas,gini
 
 def finddecisiontree(datas,root,level,maxdepth): #x=[[],[]]
@@ -95,11 +99,6 @@ def decisiontree(datas,maxdepth=20):
     node=finddecisiontree(datas,root,level,maxdepth)
     return node
 
-# def compute_acc(root,acc,level,maxdepth):
-#     acc[level]=acc.setdefault(level,0)+max(len(root.splitdataset[0]),len(root.splitdataset[1]))
-#     if level<(maxdepth-1):
-#         compute_acc(root.left,acc,level,maxdepth)
-#         compute_acc(root.left,acc,level,maxdepth)
 ####################main#####################
 maxdepth=1
 df=pd.read_csv("pa3_train_reduced.csv",header=None)
@@ -111,16 +110,9 @@ xv=df.iloc[:,:].values
 datas=xt
 # result=(yt-4)*(-1)
 acc={}
-# print(len(datas))
 print (time.asctime( time.localtime(time.time()) ))
-
 root=decisiontree(datas,maxdepth)
 print (time.asctime( time.localtime(time.time()) ))
-
-# compute_acc(root,acc,0,maxdepth)
-# for key, values in acc:
-#     print(key,' acc: ', values/4888)
-# print(root.splitfeature,root.splitsample)
 
 
 
