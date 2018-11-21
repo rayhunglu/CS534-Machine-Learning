@@ -5,133 +5,110 @@ decision tree
 """
 import numpy as np
 import pandas as pd
-
+import time
 class Node:
     def __init__(self):
         self.left = None                              # training examples
         self.right = None
-        # self.splitdataset=splitdataset
         self.splitfeature = None
-        self.splitsample=None
+        self.splitthreshold=None
 
-def splittoleftright(data,result):#left:1,right:-1
-    left=[]
-    right=[]
-    for i in range(len(result)):
-        if result[i]==1:
-            left.append(i)
-        else:
-            right.append(i)
-    return [left,right]
+def splitDataSet(datas,feature,threshold):
+    # rightnode=Node()
+    # leftnode=Node()
+    # data=datas[datas[:, feature].argsort()]
+    # leftdatas,rightdatas=np.split(datas,[sample],axis=0)  #split <T,>=T
+    # left=leftdatas[leftdatas[:,0].argsort()]      #split +-1
+    # right=rightdatas[rightdatas[:,0].argsort()]   #split +-1
+    # llnum=np.argmax(left.T[0])          #nums of left of left node
+    # rlnum=np.argmax(right.T[0])
+    data=datas[datas[:,feature].argsort()]    #+-1
+    for i in range(0,len(data)):
+        if data[i][feature]>=threshold:
+            break
+    leftdatas,rightdatas=np.split(data,[i],axis=0)
 
-def splitDataSet(x,root):
-    rightnode=Node([[],[]])
-    leftnode=Node([[],[]])
-    # rightnode.splitdataset=root.splitdataset
-    threshold=x[root.splitsample][root.splitfeature]
-    # leftnode.splitdataset=[[],[]]
-    leftpart=root.splitdataset[0]
-    rightpart=root.splitdataset[1]
-    for i in leftpart:
-        if x[i][root.splitfeature]<threshold:
-            leftnode.splitdataset[0].append(i)
-        else:
-            rightnode.splitdataset[0].append(i)
-    for i in rightpart:
-        if x[i][root.splitfeature]<threshold:
-            leftnode.splitdataset[1].append(i)
-        else:
-            rightnode.splitdataset[1].append(i)
-    return leftnode,rightnode
+    return leftdatas,rightdatas
 
-def compute_gini(p,n):
-    if p+n==0:
-        return 0
-    return 1-(p/(p+n))**2-(n/(p+n))**2
+def gini_benefit(left,right,feature,value):
+    # if right[len(right)-1][feature]<value:
+    #     lr=right
+    #     rr=[]
+    # else:
+    #     for i in range(0,len(right)):
+    #         if right[i][feature]>=value:
+    #             break
+    #     lr,rr=np.split(right,[i],axis=0)
 
-def gini_benefit(x,y,feature,sample,dataSet):
-    left=[0,0]
-    right=[0,0]
-    threshold=x[sample][feature]
-    list1 = x.T[feature]
-    split = list1.index(threshold)
-    iter1, iter2 = list1[:split], list1[split:]
-    # np.split(A,[2],axis=0)
-    # for i in dataSet[0]:
-    #     if x[i][feature]<threshold:
-    #         left[0]+=1
-    #     else:
-    #         right[0]+=1
-    # for i in dataSet[1]:
-    #     if x[i][feature]<threshold:
-    #         left[1]+=1
-    #     else:
-    #         right[1]+=1
-    # print(len(dataSet[0]),len(dataSet[1]))
-    # print(left[0],left[1])
-    # print(right[0],right[1])
+    # if left[len(left)-1][feature]<value:
+    #     ll=left
+    #     lr=[]
+    # else:
+    #     for i in range(0,len(left)):
+    #         if left[i][feature]>=value:
+    #             break
+    #     ll,rl=np.split(left,[i],axis=0)
+    # llnum=len(ll)          #nums of left of left node
+    # rlnum=len(rl)         #nums of left of right node
+    # c=len(left)+len(right)
+    # l=len(ll)+len(lr)
+    # r=len(rl)+len(rr)
+    llnum=1
+    rlnum=1
+    c=1
+    l=1
+    r=1
+    if l==0 or r==0:
+        return 0,llnum,rlnum
+    vl=(2*llnum*(l-llnum)/(c*l))
+    vr=(2*rlnum*(r-rlnum)/(c*r))
+    return 1-vl-vr,llnum,rlnum
 
-    ua=compute_gini(len(dataSet[0]),len(dataSet[1]))
-    ual=compute_gini(left[0],left[1])
-    uar=compute_gini(right[0],right[1])
-    pl=(left[0]+left[1])/(len(dataSet[0])+len(dataSet[1]))
-    pr=(right[0]+right[1])/(len(dataSet[0])+len(dataSet[1]))
-    return ua-pl*ual-pr*uar
-
-# def choosefeature(x,dataSet):
-#     xx=x.T
-#     a=[]
-#     choose=[]
-#     ll=0
-#     rr=0
-#     for j in range(0,len(xx)):
-#         for i in dataSet[0]:
-#             ll+=xx[j][i]
-#         for i in dataSet[1]:
-#             rr+=xx[j][i]
-#         el=ll/len(dataSet[0])
-#         er=rr/len(dataSet[1])
-#         a.append(abs(el-er))
-#     b=sorted(a)
-#     b=b[80:100]
-#     for i in range(0,len(xx)):
-#         if a[i] in b:
-#             choose.append(i)
-#     return choose
-
-def chooseBestFeatureToSplit(datas,dataSet):
-    features=0
-    feature=[[],[]]
-    # choose=choosefeature(x,dataSet)
+def chooseBestFeatureToSplit(datas,root):
     gini=0
-    samples=dataSet[0]+dataSet[1]
-    for i in range(1,len(x[0])):#feature
-    # for i in choose:#feature
+    threshold=0
+    feature=0
+    # y=datas.T[0]
+    for i in range(1,len(datas[0])):        #feature 1~101 100s
         print(i)
-        for j in samples:#sample#
-            b=gini_benefit(x,y,i,j,dataSet)
+        value=datas.T[i]                    #the data of the test feature
+        data=datas[datas[:,i].argsort()]    #+-1
+        rllnum=np.argmin(data.T[0])
+        right,left=np.split(data,[rllnum],axis=0)  #split -1 part, +1 part
+        left=left[left[:,i].argsort()]      #sort feature in +1 part
+        right=right[right[:,i].argsort()]   #sort feature in -1 part
+        # print(value)
+        for j in range(0,len(value)):#sample#
+            b,llnum,rlnum=gini_benefit(left,right,i,value[j])
             if b>gini:
                 gini=b
-                features=x[j][i]
+                ll=llnum
+                rl=rlnum
                 feature=i
-                sample=j
-    print('threshold',sample,feature)
-    return feature,sample
+                threshold=value[j]
+                # sample=j
+                # if j==len(left):
+                #     threshold=left[j-1][1]
+                # else:
+                #     threshold=left[j][i]
+
+    print('threshold',threshold,feature)
+    return feature,threshold,ll,rl
 
 def finddecisiontree(datas,root,level,maxdepth): #x=[[],[]]
-    feature,sample=chooseBestFeatureToSplit(datas,root)
+    feature,threshold,llnum,rlnum=chooseBestFeatureToSplit(datas,root)
     root.splitfeature=feature
-    root.splitsample=sample
-    leftnode,rightnode=splitDataSet(datas,root)
-    print(len(leftnode.splitdataset[0]),len(leftnode.splitdataset[1]))
-    print(len(rightnode.splitdataset[0]),len(rightnode.splitdataset[1]))
-    if level<maxdepth-1:
-        if leftnode.splitdataset[0]!=0 and leftnode.splitdataset[1]!=0:
-            leftnode=finddecisiontree(x,y,leftnode,level+1,maxdepth)
-        if rightnode.splitdataset[0]!=0 and rightnode.splitdataset[1]!=0:
-            rightnode=finddecisiontree(x,y,rightnode,level+1,maxdepth)
+    root.splitthreshold=threshold
+    rightnode=Node()
+    leftnode=Node()
     root.left=leftnode
     root.right=rightnode
+    leftdatas,rightdatas=splitDataSet(datas,feature,threshold)
+    if level<maxdepth-1:
+        if llnum!=0 and llnum!=len(leftdatas):
+            leftnode=finddecisiontree(leftdatas,leftnode,level+1,maxdepth)
+        if rlnum!=0 and rlnum!=len(rightdatas):
+            rightnode=finddecisiontree(rightdatas,rightnode,level+1,maxdepth)
     return root
 
 def decisiontree(datas,maxdepth=20):
@@ -148,7 +125,7 @@ def decisiontree(datas,maxdepth=20):
 #         compute_acc(root.left,acc,level,maxdepth)
 #         compute_acc(root.left,acc,level,maxdepth)
 ####################main#####################
-maxdepth=1
+maxdepth=20
 df=pd.read_csv("pa3_train_reduced.csv",header=None)
 xt=df.iloc[:,:].values
 # yt=df.iloc[:, :1].values
@@ -158,8 +135,12 @@ xv=df.iloc[:,:].values
 datas=xt
 # result=(yt-4)*(-1)
 acc={}
-# print(datas)
+# print(len(datas))
+print (time.asctime( time.localtime(time.time()) ))
+
 root=decisiontree(datas,maxdepth)
+print (time.asctime( time.localtime(time.time()) ))
+
 # compute_acc(root,acc,0,maxdepth)
 # for key, values in acc:
 #     print(key,' acc: ', values/4888)
