@@ -13,99 +13,136 @@ class Node:
         self.splitfeature = None
         self.splitthreshold=None
 
-def gini_benefit(datas,sample):
-    left,right=np.split(datas,[sample],axis=0)  #split <T,>=T
-    if len(left)==0:
-        llnum=0
+def gini_benefit(cl,cr,ll,lr,rl,rr):
+    if ll+lr==0 or rl+rr==0:
+        return 0
+    vl=(2*ll*lr/((cl+cr)*(ll+lr)))
+    vr=(2*rl*rr/((cl+cr)*(rl+rr)))
+    return (1-vl-vr)
+def computechange(y,ll,lr,rl,rr):
+    if y==3:
+        rl-=1
+        ll+=1
     else:
-        llnum=(sum(left[:,0])-(3*len(left)))/2
-    if len(right)==0:
-        rlnum=0
-    else:
-        rlnum=(sum(right[:,0])-(3*len(right)))/2
-    c=len(datas)
-    l=len(left)
-    r=len(right)
-    # llnum=1
-    # rlnum=1
-    # c=1
-    # l=1
-    # r=1
-    if l==0 or r==0:
-        return 0,left,right,llnum,rlnum
-    vl=(2*llnum*(l-llnum)/(c*l))
-    vr=(2*rlnum*(r-rlnum)/(c*r))
-    return (1-vl-vr),left,right,llnum,rlnum
-
-def chooseBestFeatureToSplit(datas,root):
+        rr-=1
+        lr+=1
+    return ll,lr,rl,rr
+def chooseBestFeatureToSplit(datas):
+    # print('datas',datas)
+    result=datas.T[0]
+    cr=(sum(result[:])-(3*len(result)))/2 #nums of 5
+    cl=len(result)-cr
+    # print(cl,cr)
     gini=0
     threshold=0
-    # y=datas.T[0]
-    leftdatas=None
-    rightdatas=None
-    llnum=0
-    rlnum=0
+    feature=0
+    fll,flr,frl,frr=0,0,0,0
+    # final_fea=1
+    # final_threshold=0
+    # print(len(datas))
     for i in range(1,len(datas[0])):#feature
         # print(i)
-        # value=datas.T[i]
-        # data=(np.asarray([y,value])).T
+        ll,lr,rl,rr=0,0,cl,cr
         data=datas[datas[:,i].argsort()]
-        for j in range(0,len(datas)):#  sample index
-            b,left,right,ll,rl=gini_benefit(data,j)
-            # print(b)
-            if b>gini:
-                gini=b
-                feature=i
-                leftdatas=left
-                rightdatas=right
-                llnum=ll
-                rlnum=rl
-                threshold=data[j][i]
-    return feature,threshold,leftdatas,rightdatas,gini,llnum,rlnum
+        y_value=data[0][0]
+        # print(y_value)
+        ll,lr,rl,rr=computechange(y_value,ll,lr,rl,rr)
+        # feature=i
+        # fll,flr,frl,frr=ll,lr,rl,rr
+        # threshold=data[0][i]
+        # gini=0        
+        # if len(datas)==2:
+        #     feature=i
+        #     fll,flr,frl,frr=ll,lr,rl,rr
+        # threshold=data[j][i]
+        for j in range(1,len(data)):#  sample index
+            y_value=data[j][0]
+            # print(ll,lr,rl,rr)
+            ll,lr,rl,rr=computechange(y_value,ll,lr,rl,rr)
+            # print(data[j][0])
+            if data[j][0]!=data[j-1][0]:
+                b=gini_benefit(cl,cr,ll,lr,rl,rr)
+                # print(b)
+                if b>gini:
+                    gini=b
+                    feature=i
+                    # final_fea=feature
+                    # final_threshold=threshold
+                    fll,flr,frl,frr=ll,lr,rl,rr
+                    threshold=data[j][i]
+        # print(gini)
+    # data=datas[datas[:,feature].argsort()]
+    # leftdatas,rightdatas=np.split(data,[fll+flr],axis=0)
+    # print('leftdatas',leftdatas,'rightdatas',rightdatas)
+    return feature,threshold,fll,flr,frl,frr
 
-def finddecisiontree(datas,root,level,maxdepth): #x=[[],[]]
-    feature,threshold,leftdatas,rightdatas,gini,llnum,rlnum=chooseBestFeatureToSplit(datas,root)
+def finddecisiontree(datas,root,level,maxdepth,acc): #x=[[],[]]
+    feature,threshold,fll,flr,frl,frr,leftdatas,rightdatas=0,0,0,0,0,0,None,None
+    feature,threshold,fll,flr,frl,frr=chooseBestFeatureToSplit(datas)
     root.splitfeature=feature
     root.splitthreshold=threshold
     rightnode=Node()
     leftnode=Node()
     root.left=leftnode
     root.right=rightnode
-    print(level,':threshold',threshold,feature,'benefit',gini)
-    # llnum,rlnum,leftdatas,rightdatas=splitDataSet(datas,feature,sample,threshold)
+    # print(type(level))
+    acc[level+1]=acc.setdefault(level+1,0)+min(fll,flr)+min(frl,frr)
+    data=datas[datas[:,feature].argsort()]
+    leftdatas,rightdatas=np.split(data,[fll+flr],axis=0)
+    # print(level,':threshold',threshold,feature,'left',fll,flr,'right',frl,frr)
+    print('level',level,':threshold',threshold,'feature',feature)
     if level<maxdepth-1:
-        if llnum!=0 and llnum!=len(leftdatas):
-            leftnode=finddecisiontree(leftdatas,leftnode,level+1,maxdepth)
-        if rlnum!=0 and rlnum!=len(rightdatas):
-            rightnode=finddecisiontree(rightdatas,rightnode,level+1,maxdepth)
-    # acc[level]=acc.sefdefault(level,0)+max(llnum,(len(leftdatas)-llnum)+max(rlnum,(len(rightdatas-rlnum))))
-    return root
+        if fll!=0 and flr!=0:
+            leftnode,acc=finddecisiontree(leftdatas,leftnode,level+1,maxdepth,acc)
+        if frl!=0 and frr!=0:
+            rightnode,acc=finddecisiontree(rightdatas,rightnode,level+1,maxdepth,acc)
+    return root,acc
 
 def decisiontree(datas,maxdepth=20):
-    # splitdata=splittoleftright(x,y)
-    # root=Node(splitdata)
     root=Node()
     level=0
-    node=finddecisiontree(datas,root,level,maxdepth)
+    acc={}
+    node,acc=finddecisiontree(datas,root,level,maxdepth,acc)
+    for i in range(1,maxdepth+1):
+        print('level ',i,'acc: ',1-(acc[i]/len(datas)))    
     return node
-
-####################main#####################
-maxdepth=11
+def testvalid(datas,root,level,vacc,maxdepth=20):
+    result=datas.T[0]
+    cr=(sum(result[:])-(3*len(result)))/2 #nums of 5
+    cl=len(result)-cr
+    # print('1',type(level))
+    vacc[level]=vacc.setdefault(level,0)+min(cl,cr)
+    
+    if level<maxdepth:
+        if cl!=0 and cr!=0:
+            print(root.splitfeature)
+            data=datas[datas[:,root.splitfeature].argsort()]
+            for i in range(0,len(data)):
+                if data[i][root.splitfeature]>=root.splitthreshold:
+                    break
+            leftdatas,rightdatas=np.split(data,[i],axis=0)
+            vacc=testvalid(leftdatas,root.left,level+1,vacc,maxdepth)
+            vacc=testvalid(rightdatas,root.right,level+1,vacc,maxdepth)
+    return vacc
+#####################main#####################
+maxdepth=6
 df=pd.read_csv("pa3_train_reduced.csv",header=None)
 xt=df.iloc[:,:].values
-# yt=df.iloc[:, :1].values
-df=pd.read_csv("pa3_valid_reduced.csv",header=None)
-xv=df.iloc[:,:].values
-# yv=df.iloc[:, :1].values
+# df=pd.read_csv("pa3_valid_reduced.csv",header=None)
+# xv=df.iloc[:,:].values
 datas=xt
+# valid_datas=xv
 # result=(yt-4)*(-1)
-acc={0:0}
-print (time.asctime( time.localtime(time.time()) ))
-root=decisiontree(datas,maxdepth)
-print(acc)
-print (time.asctime( time.localtime(time.time()) ))
-
-
-
-
+# wArr = np.ones(df.shape[0])
+print(df[0].max())
+# print (time.asctime( time.localtime(time.time()) ))
+# print ('training')
+# root=decisiontree(datas,maxdepth)
+# print ('validation')
+# vacc={}
+# level=0
+# vacc=testvalid(valid_datas,root,level,vacc,maxdepth)
+# for i in range(1,maxdepth+1):
+#     print('level ',i,'vacc: ',1-(vacc[i]/len(valid_datas)))
+# print (time.asctime( time.localtime(time.time()) ))
 
