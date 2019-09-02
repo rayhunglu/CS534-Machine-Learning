@@ -1,5 +1,4 @@
 Python version using - python3.7
- To run our code, it needs both file "pa1.py" and file "helper.py" in the same directory
  
 1.  cd /scratch/cs534
 2.  /bin/bash
